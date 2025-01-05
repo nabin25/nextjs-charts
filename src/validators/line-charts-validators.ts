@@ -20,4 +20,12 @@ const secondStepSchema = (length: number) =>
     )
     .length(length, { message: `Exactly ${length} fields are required` });
 
-export { firstStepSchema, secondStepSchema };
+const thirdStepSchema = (keyArray: string[]) =>
+  z.array(
+    z.object({
+      name: z.string().optional(),
+      ...Object.fromEntries(keyArray.map((key) => [key, z.number()])),
+    })
+  );
+
+export { firstStepSchema, secondStepSchema, thirdStepSchema };

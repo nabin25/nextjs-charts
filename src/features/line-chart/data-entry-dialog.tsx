@@ -5,14 +5,16 @@ import {
   Checkbox,
   Dialog,
   Flex,
+  Grid,
   Tabs,
   Text,
   TextField,
 } from "@radix-ui/themes";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import {
   firstStepSchema,
   secondStepSchema,
+  thirdStepSchema,
 } from "@/validators/line-charts-validators";
 import { z } from "zod";
 import {
@@ -24,9 +26,13 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import generateRandomColor from "@/utils/generateRandomColor";
 import SelectComponent from "@/components/ui/select-component";
+import { TbTrash } from "react-icons/tb";
+import { PiPlus } from "react-icons/pi";
+import { v4 as uuidv4 } from "uuid";
 
 type FirstFormType = z.infer<typeof firstStepSchema>;
 type SecondStepForm = z.infer<ReturnType<typeof secondStepSchema>>;
+type ThirdStepForm = z.infer<ReturnType<typeof thirdStepSchema>>;
 
 const lineTypes = [
   { label: "solid", value: "solid" },
@@ -41,6 +47,7 @@ const DataEntryDialog = () => {
   };
 
   const [fieldCount, setFieldCount] = useState<number | null>(null);
+  const [secondFormArray, setSecondFormArray] = useState<string[]>([]);
 
   const [currentTab, setCurrentTab] =
     useState<keyof typeof formStepEnum>("numberOfFields");
@@ -51,18 +58,15 @@ const DataEntryDialog = () => {
       fields: secondStepSchema(length),
     });
 
+  const thirdFormResolverSchema = (length: number) =>
+    z.object({
+      fields: thirdStepSchema(secondFormArray),
+    });
+
   const firstForm = useForm<FirstFormType>({
     resolver: zodResolver(firstStepSchema),
     defaultValues: { number_of_fields: 1, show_cartesian_grid: true },
   });
-
-  const onSubmitFirstForm: SubmitHandler<FirstFormType> = (
-    data: FirstFormType
-  ) => {
-    setFieldCount(data.number_of_fields);
-    setCurrentTab("nameOfFields");
-    secondForm.reset();
-  };
 
   const secondForm = useForm<{ fields: SecondStepForm }>({
     resolver: fieldCount
@@ -79,13 +83,40 @@ const DataEntryDialog = () => {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const thirdForm = useForm<{ fields: ThirdStepForm }>({
+    resolver: zodResolver(thirdStepSchema(secondFormArray)),
+  });
+
+  const onSubmitFirstForm: SubmitHandler<FirstFormType> = (
+    data: FirstFormType
+  ) => {
+    setFieldCount(data.number_of_fields);
+    setCurrentTab("nameOfFields");
+    secondForm.reset();
+  };
+
+  const { fields } = useFieldArray({
     control: secondForm.control,
+    name: "fields",
+  });
+
+  const {
+    fields: thirdField,
+    append,
+    remove,
+  } = useFieldArray({
+    control: thirdForm.control,
     name: "fields",
   });
 
   const onSubmitSecondForm = (data: { fields: SecondStepForm }) => {
     setCurrentTab("individualData");
+    setSecondFormArray(data.fields.map((item) => item.name));
+    thirdForm.reset();
+  };
+
+  const onSubmitThirdForm = (data: { fields: ThirdStepForm }) => {
+    setIsOpen(false);
   };
 
   useEffect(() => {
@@ -101,8 +132,6 @@ const DataEntryDialog = () => {
       });
     }
   }, [fieldCount, secondForm]);
-
-  console.log(firstForm.getValues());
 
   return (
     <>
@@ -264,34 +293,100 @@ const DataEntryDialog = () => {
               </Tabs.Content>
 
               <Tabs.Content value="individualData">
-                <form onSubmit={firstForm.handleSubmit(onSubmitFirstForm)}>
-                  <Flex direction="column" gap="3">
-                    <label>
-                      <Text as="div" size="2" mb="1" weight="bold">
-                        Number of fields(Same number of lines will be displayed)
-                      </Text>
-                      <TextField.Root
-                        type="number"
-                        placeholder="Enter number of values"
-                        {...firstForm.register("number_of_fields")}
-                      />
-                      {firstForm.formState.errors.number_of_fields && (
-                        <Text color="red" size="2" mt="1">
-                          {firstForm.formState.errors.number_of_fields.message}
-                        </Text>
-                      )}
-                    </label>
+                <form onSubmit={thirdForm.handleSubmit(onSubmitThirdForm)}>
+                  <Flex align="center" gap="2" mb="2" justify="between">
+                    <Text></Text>
+                    <Text>Name</Text>
+                    {secondFormArray.map((item, index) => (
+                      <Text key={index}>{item}</Text>
+                    ))}
+                    <p></p>
                   </Flex>
-                  <Flex gap="3" mt="4" justify="end">
+                  {thirdField.map((field, index) => {
+                    return (
+                      <Flex
+                        key={index}
+                        align="center"
+                        gap="2"
+                        mb="2"
+                        justify="between"
+                      >
+                        <Button
+                          type="button"
+                          color="red"
+                          onClick={() => remove(index)}
+                          className="h-5 !rounded-xl !bg-red-400"
+                        >
+                          <TbTrash />
+                        </Button>
+                        <label className="grid-cols-1">
+                          <TextField.Root
+                            {...thirdForm.register(`fields.${index}.name`)}
+                            placeholder={`Name ${index + 1}`}
+                          />
+                          {thirdForm.formState.errors.fields?.[index]?.name && (
+                            <Text color="red" size="2" mt="1">
+                              {thirdForm.formState.errors.fields[index]?.name
+                                ?.message || ""}
+                            </Text>
+                          )}
+                        </label>
+
+                        {Object.keys(field).map((key) => {
+                          if (key === "id" || key === "name") return null;
+
+                          return (
+                            <Flex direction="column">
+                              <TextField.Root
+                                type="number"
+                                placeholder={key}
+                                step="any"
+                                {...thirdForm.register(
+                                  `fields.${index}.${key}` as
+                                    | "fields"
+                                    | `fields.${number}`
+                                    | `fields.${number}.name`
+                                )}
+                              />
+                            </Flex>
+                          );
+                        })}
+                      </Flex>
+                    );
+                  })}
+                  <Button
+                    type="button"
+                    onClick={() =>
+                      append({
+                        name: "",
+                        ...Object.fromEntries(
+                          secondFormArray.map((key) => [key, 0])
+                        ),
+                      })
+                    }
+                  >
+                    <PiPlus />
+                  </Button>
+                  <Flex gap="3" mt="4" justify="between">
                     <Button
-                      variant="soft"
-                      color="gray"
                       type="button"
-                      onClick={() => setIsOpen(false)}
+                      onClick={() => {
+                        setCurrentTab("nameOfFields");
+                      }}
                     >
-                      Cancel
+                      Previous
                     </Button>
-                    <Button type="submit">Next</Button>
+                    <Flex gap="3">
+                      <Button
+                        variant="soft"
+                        color="gray"
+                        type="button"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit">Next</Button>
+                    </Flex>
                   </Flex>
                 </form>
               </Tabs.Content>
