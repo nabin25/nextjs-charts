@@ -58,9 +58,6 @@ const data = [
 ];
 
 export default function LineChartComponent() {
-  useEffect(() => {
-    console.log("Triggered");
-  }, []);
   return (
     <>
       <ResponsiveContainer width={"40%"} height={400}>
