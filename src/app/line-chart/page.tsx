@@ -10,8 +10,8 @@ const Page = () => {
       <div className="flex items-center justify">
         <DataEntryDialog setDataArray={setDataArray} />
       </div>
-      {dataArray.map((singleValue) => (
-        <LineChartComponent data={singleValue} />
+      {dataArray.map((singleValue, index) => (
+        <LineChartComponent data={singleValue} key={index} />
       ))}
     </div>
   );

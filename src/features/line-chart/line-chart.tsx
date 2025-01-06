@@ -1,5 +1,4 @@
 "use client";
-import { useEffect } from "react";
 import {
   LineChart,
   Line,
@@ -16,23 +15,23 @@ export default function LineChartComponent({ data }: { data: any }) {
   return (
     <>
       <ResponsiveContainer width={"40%"} height={400}>
-        <LineChart data={data} margin={{ top: 20 }}>
-          <CartesianGrid strokeDasharray="3 3" />
+        <LineChart data={data.data} margin={{ top: 20 }}>
+          {data.firstFormData.show_cartesian_grid && (
+            <CartesianGrid strokeDasharray="3 3" />
+          )}
           <XAxis dataKey="name" padding={{ left: 30, right: 30 }} />
           <YAxis />
           <Tooltip />
           <Legend />
-          <Line
-            type="monotone"
-            dataKey="pv"
-            stroke="#8884d8"
-            activeDot={{ r: 8 }}
-          >
-            <LabelList position="top" offset={10} />
-          </Line>
-          <Line type="monotone" dataKey="uv" stroke="#82ca9d">
-            <LabelList position="top" offset={10} />
-          </Line>
+          {data.secondFormData.map((singleData: any, index: any) => (
+            <Line
+              type="monotone"
+              key={index}
+              dataKey={singleData.name}
+              stroke={singleData.color || "#8884d8"}
+              activeDot={{ r: 8 }}
+            ></Line>
+          ))}
         </LineChart>
       </ResponsiveContainer>
     </>

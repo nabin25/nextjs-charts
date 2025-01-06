@@ -51,6 +51,8 @@ const DataEntryDialog = ({
   };
 
   const [fieldCount, setFieldCount] = useState<number | null>(null);
+  const [firstFormData, setFirstFormData] = useState<any>();
+  const [secondFormData, setSecondFormData] = useState<any>();
   const [secondFormArray, setSecondFormArray] = useState<string[]>([]);
 
   const [currentTab, setCurrentTab] =
@@ -95,6 +97,7 @@ const DataEntryDialog = ({
     data: FirstFormType
   ) => {
     setFieldCount(data.number_of_fields);
+    setFirstFormData(data);
     setCurrentTab("nameOfFields");
     secondForm.reset();
   };
@@ -116,17 +119,16 @@ const DataEntryDialog = ({
   const onSubmitSecondForm = (data: { fields: SecondStepForm }) => {
     setCurrentTab("individualData");
     setSecondFormArray(data.fields.map((item) => item.name));
+    setSecondFormData(data.fields);
     thirdForm.reset();
   };
 
   const onSubmitThirdForm = (data: { fields: ThirdStepForm }) => {
     // console.log(data);
     //@ts-ignore
-    setDataArray([data.fields]);
+    setDataArray([{ firstFormData, secondFormData, data: data.fields }]);
     setIsOpen(false);
   };
-
-  console.log(thirdForm.getValues());
 
   useEffect(() => {
     if (fieldCount !== null) {
