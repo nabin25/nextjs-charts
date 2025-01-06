@@ -44,8 +44,9 @@ export default function LineChartComponent({ data }: { data: any }) {
         mt="4"
         style={{
           width: `${getWidth() + 20}px`,
-          height: `${getWidth() + 20}px`,
+          height: `${getHeight() + 130}px`,
         }}
+        className="bg-gray-300 shadow-xl dark:bg-[#111] justify-self-center"
       >
         <Flex justify="center" align="center">
           <div>
@@ -57,15 +58,7 @@ export default function LineChartComponent({ data }: { data: any }) {
                 <XAxis dataKey="name" padding={{ left: 30, right: 30 }} />
                 <YAxis />
                 <Tooltip />
-                <Legend
-                  wrapperStyle={{
-                    display: "flex",
-                    alignItems: "start",
-                    paddingLeft: "30px",
-                    justifyContent: "start",
-                    fontSize: "12px",
-                  }}
-                />
+                <Legend />
                 {data.secondFormData.map((singleData: any, index: any) => (
                   <Line
                     type="monotone"

@@ -124,9 +124,18 @@ const DataEntryDialog = ({
   };
 
   const onSubmitThirdForm = (data: { fields: ThirdStepForm }) => {
-    // console.log(data);
     //@ts-ignore
-    setDataArray([{ firstFormData, secondFormData, data: data.fields }]);
+    setDataArray((prev) => [
+      ...prev,
+      { firstFormData, secondFormData, data: data.fields },
+    ]);
+    setCurrentTab("numberOfFields");
+    firstForm.reset();
+    secondForm.reset();
+    thirdForm.reset();
+    setFieldCount(0);
+    setSecondFormArray([]);
+    setSecondFormData(null);
     setIsOpen(false);
   };
 
