@@ -39,7 +39,11 @@ const lineTypes = [
   { label: "dashed", value: "dashed" },
 ];
 
-const DataEntryDialog = () => {
+const DataEntryDialog = ({
+  setDataArray,
+}: {
+  setDataArray: React.SetStateAction<React.Dispatch<any[]>>;
+}) => {
   const formStepEnum = {
     numberOfFields: "Select number of fields",
     nameOfFields: "Enter name for each fields",
@@ -58,9 +62,9 @@ const DataEntryDialog = () => {
       fields: secondStepSchema(length),
     });
 
-  const thirdFormResolverSchema = (length: number) =>
+  const thirdFormResolverSchema = (secondArray: string[]) =>
     z.object({
-      fields: thirdStepSchema(secondFormArray),
+      fields: thirdStepSchema(secondArray),
     });
 
   const firstForm = useForm<FirstFormType>({
@@ -84,7 +88,7 @@ const DataEntryDialog = () => {
   });
 
   const thirdForm = useForm<{ fields: ThirdStepForm }>({
-    resolver: zodResolver(thirdStepSchema(secondFormArray)),
+    resolver: zodResolver(thirdFormResolverSchema(secondFormArray)),
   });
 
   const onSubmitFirstForm: SubmitHandler<FirstFormType> = (
@@ -116,8 +120,13 @@ const DataEntryDialog = () => {
   };
 
   const onSubmitThirdForm = (data: { fields: ThirdStepForm }) => {
+    // console.log(data);
+    //@ts-ignore
+    setDataArray([data.fields]);
     setIsOpen(false);
   };
+
+  console.log(thirdForm.getValues());
 
   useEffect(() => {
     if (fieldCount !== null) {
@@ -132,6 +141,19 @@ const DataEntryDialog = () => {
       });
     }
   }, [fieldCount, secondForm]);
+
+  useEffect(() => {
+    if (secondFormArray.length !== 0) {
+      thirdForm.reset({
+        fields: [
+          {
+            name: "",
+            ...Object.fromEntries(secondFormArray.map((key) => [key, 0])),
+          },
+        ],
+      });
+    }
+  }, [secondFormArray, thirdForm]);
 
   return (
     <>
@@ -336,19 +358,46 @@ const DataEntryDialog = () => {
                           if (key === "id" || key === "name") return null;
 
                           return (
-                            <Flex direction="column">
-                              <TextField.Root
-                                type="number"
-                                placeholder={key}
-                                step="any"
-                                {...thirdForm.register(
+                            <>
+                              <Controller
+                                name={
                                   `fields.${index}.${key}` as
                                     | "fields"
                                     | `fields.${number}`
                                     | `fields.${number}.name`
+                                }
+                                control={thirdForm.control}
+                                render={({ field: { onChange, value } }) => (
+                                  <Flex direction="column">
+                                    <TextField.Root
+                                      type="number"
+                                      placeholder={key}
+                                      step="any"
+                                      onChange={(e) =>
+                                        onChange(
+                                          e.target.value
+                                            ? Number(e.target.value)
+                                            : 0
+                                        )
+                                      }
+                                    />
+                                  </Flex>
                                 )}
                               />
-                            </Flex>
+                              {/* <Flex direction="column">
+                                  <TextField.Root
+                                    type="number"
+                                    placeholder={key}
+                                    step="any"
+                                    {...thirdForm.register(
+                                      `fields.${index}.${key}` as
+                                        | "fields"
+                                        | `fields.${number}`
+                                        | `fields.${number}.name`
+                                    )}
+                                  />
+                                </Flex> */}
+                            </>
                           );
                         })}
                       </Flex>
