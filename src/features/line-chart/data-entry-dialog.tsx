@@ -6,6 +6,7 @@ import {
   Dialog,
   Flex,
   Grid,
+  Slider,
   Tabs,
   Text,
   TextField,
@@ -54,10 +55,13 @@ const DataEntryDialog = ({
   const [firstFormData, setFirstFormData] = useState<any>();
   const [secondFormData, setSecondFormData] = useState<any>();
   const [secondFormArray, setSecondFormArray] = useState<string[]>([]);
+  const [fieldCountToAdd, setFieldCountToAdd] = useState<number | null>(1);
 
   const [currentTab, setCurrentTab] =
     useState<keyof typeof formStepEnum>("numberOfFields");
   const [isOpen, setIsOpen] = useState(false);
+
+  const [sliderRange, setSliderRange] = useState([20000, 50000]);
 
   const secondFormResolverSchema = (length: number) =>
     z.object({
@@ -165,6 +169,23 @@ const DataEntryDialog = ({
       });
     }
   }, [secondFormArray, thirdForm]);
+
+  const fillRandomValues = () => {
+    const updatedFields = thirdField.map((field, index) => {
+      const updatedField = { ...field };
+      secondFormArray.forEach((arrayItem) => {
+        if (arrayItem !== "name") {
+          //@ts-ignore
+          updatedField[arrayItem] =
+            Math.floor(Math.random() * (sliderRange[1] - sliderRange[0] + 1)) +
+            sliderRange[0];
+        }
+      });
+      return updatedField;
+    });
+
+    thirdForm.reset({ fields: updatedFields });
+  };
 
   return (
     <>
@@ -301,6 +322,11 @@ const DataEntryDialog = ({
                       />
                     </Flex>
                   ))}
+                  {secondForm?.formState?.errors?.fields?.root?.message && (
+                    <div className="bg-red-500/70 rounded-md py-3 px-5">
+                      {secondForm?.formState?.errors?.fields?.root?.message}
+                    </div>
+                  )}
                   <Flex gap="3" mt="4" justify="between">
                     <Button
                       type="button"
@@ -326,6 +352,27 @@ const DataEntryDialog = ({
               </Tabs.Content>
 
               <Tabs.Content value="individualData">
+                <Flex align="center" justify="between" gap="3" mb="3">
+                  <Flex direction="column" flexGrow="1" gap="2">
+                    <Flex flexGrow="1" justify="between">
+                      <p>{sliderRange[0]}</p>
+                      <p>{sliderRange[1]}</p>
+                    </Flex>
+
+                    <Slider
+                      value={sliderRange}
+                      onValueChange={(value) => {
+                        setSliderRange(value);
+                      }}
+                      defaultValue={[1000, 10000]}
+                      min={1}
+                      max={100000}
+                    />
+                  </Flex>
+
+                  <Button onClick={fillRandomValues}>Fill randomly</Button>
+                </Flex>
+
                 <form onSubmit={thirdForm.handleSubmit(onSubmitThirdForm)}>
                   <Flex align="center" gap="2" mb="2" justify="between">
                     <Text></Text>
@@ -335,98 +382,123 @@ const DataEntryDialog = ({
                     ))}
                     <p></p>
                   </Flex>
-                  {thirdField.map((field, index) => {
-                    return (
-                      <Flex
-                        key={index}
-                        align="center"
-                        gap="2"
-                        mb="2"
-                        justify="between"
-                      >
-                        <Button
-                          type="button"
-                          color="red"
-                          onClick={() => remove(index)}
-                          className="h-5 !rounded-xl !bg-red-400"
+                  <div className="max-h-60 overflow-y-scroll">
+                    {thirdField.map((field, index) => {
+                      return (
+                        <Flex
+                          key={field.id}
+                          align="center"
+                          gap="2"
+                          mb="2"
+                          justify="between"
+                          className=""
                         >
-                          <TbTrash />
-                        </Button>
-                        <label className="grid-cols-1">
-                          <TextField.Root
-                            {...thirdForm.register(`fields.${index}.name`)}
-                            placeholder={`Name ${index + 1}`}
-                          />
-                          {thirdForm.formState.errors.fields?.[index]?.name && (
-                            <Text color="red" size="2" mt="1">
-                              {thirdForm.formState.errors.fields[index]?.name
-                                ?.message || ""}
-                            </Text>
-                          )}
-                        </label>
+                          <Button
+                            type="button"
+                            color="red"
+                            onClick={() => remove(index)}
+                            className="h-5 !rounded-xl !bg-red-400"
+                          >
+                            <TbTrash />
+                          </Button>
+                          <label className="grid-cols-1">
+                            <TextField.Root
+                              {...thirdForm.register(`fields.${index}.name`)}
+                              placeholder={`Name ${index + 1}`}
+                            />
+                            {thirdForm.formState.errors.fields?.[index]
+                              ?.name && (
+                              <Text color="red" size="2" mt="1">
+                                {thirdForm.formState.errors.fields[index]?.name
+                                  ?.message || ""}
+                              </Text>
+                            )}
+                          </label>
 
-                        {Object.keys(field).map((key) => {
-                          if (key === "id" || key === "name") return null;
+                          {Object.keys(field).map((key) => {
+                            if (key === "id" || key === "name") return null;
 
-                          return (
-                            <>
-                              <Controller
-                                name={
-                                  `fields.${index}.${key}` as
-                                    | "fields"
-                                    | `fields.${number}`
-                                    | `fields.${number}.name`
-                                }
-                                control={thirdForm.control}
-                                render={({ field: { onChange, value } }) => (
-                                  <Flex direction="column">
-                                    <TextField.Root
-                                      type="number"
-                                      placeholder={key}
-                                      step="any"
-                                      onChange={(e) =>
-                                        onChange(
-                                          e.target.value
-                                            ? Number(e.target.value)
-                                            : 0
-                                        )
-                                      }
-                                    />
-                                  </Flex>
-                                )}
-                              />
-                              {/* <Flex direction="column">
-                                  <TextField.Root
-                                    type="number"
-                                    placeholder={key}
-                                    step="any"
-                                    {...thirdForm.register(
-                                      `fields.${index}.${key}` as
-                                        | "fields"
-                                        | `fields.${number}`
-                                        | `fields.${number}.name`
-                                    )}
-                                  />
-                                </Flex> */}
-                            </>
+                            return (
+                              <>
+                                <Controller
+                                  name={
+                                    `fields.${index}.${key}` as
+                                      | "fields"
+                                      | `fields.${number}`
+                                      | `fields.${number}.name`
+                                  }
+                                  control={thirdForm.control}
+                                  render={({ field: { onChange, value } }) => (
+                                    <Flex direction="column">
+                                      <TextField.Root
+                                        type="number"
+                                        placeholder={key}
+                                        //@ts-ignore
+                                        value={value}
+                                        step="any"
+                                        onChange={(e) =>
+                                          onChange(
+                                            e.target.value
+                                              ? Number(e.target.value)
+                                              : 0
+                                          )
+                                        }
+                                      />
+                                    </Flex>
+                                  )}
+                                />
+                              </>
+                            );
+                          })}
+                        </Flex>
+                      );
+                    })}
+                  </div>
+                  <Flex gap="3">
+                    <TextField.Root
+                      type="number"
+                      placeholder="Add n fields"
+                      className="w-28"
+                      value={fieldCountToAdd || ""}
+                      onChange={(e) => {
+                        const value = e.target.value
+                          ? Number(e.target.value)
+                          : null;
+                        setFieldCountToAdd(value);
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        const currentLength = secondFormArray.length;
+
+                        const fieldsToAdd = Math.min(
+                          30 - currentLength,
+                          fieldCountToAdd || 1
+                        );
+
+                        if (fieldsToAdd > 0) {
+                          const newFields = Array.from(
+                            { length: fieldsToAdd },
+                            () => ({
+                              name: "",
+                              ...Object.fromEntries(
+                                secondFormArray.map((key) => [key, 0])
+                              ),
+                            })
                           );
-                        })}
-                      </Flex>
-                    );
-                  })}
-                  <Button
-                    type="button"
-                    onClick={() =>
-                      append({
-                        name: "",
-                        ...Object.fromEntries(
-                          secondFormArray.map((key) => [key, 0])
-                        ),
-                      })
-                    }
-                  >
-                    <PiPlus />
-                  </Button>
+
+                          append(newFields);
+                          setFieldCountToAdd(null);
+                        } else {
+                          alert("You can't add more than 30 fields.");
+                        }
+                      }}
+                    >
+                      <PiPlus />
+                    </Button>
+                  </Flex>
+
                   <Flex gap="3" mt="4" justify="between">
                     <Button
                       type="button"
