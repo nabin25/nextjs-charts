@@ -171,20 +171,22 @@ const DataEntryDialog = ({
   }, [secondFormArray, thirdForm]);
 
   const fillRandomValues = () => {
-    const updatedFields = thirdField.map((field, index) => {
-      const updatedField = { ...field };
+    thirdField.forEach((field, index) => {
       secondFormArray.forEach((arrayItem) => {
         if (arrayItem !== "name") {
-          //@ts-ignore
-          updatedField[arrayItem] =
+          const randomValue =
             Math.floor(Math.random() * (sliderRange[1] - sliderRange[0] + 1)) +
             sliderRange[0];
+
+          //@ts-ignore
+          thirdForm.setValue(`fields.${index}.${arrayItem}`, randomValue, {
+            shouldDirty: true,
+            shouldTouch: true,
+            shouldValidate: true,
+          });
         }
       });
-      return updatedField;
     });
-
-    thirdForm.reset({ fields: updatedFields });
   };
 
   return (
