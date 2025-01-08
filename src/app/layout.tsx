@@ -5,6 +5,9 @@ import "@radix-ui/themes/styles.css";
 import { Theme } from "@radix-ui/themes";
 import Navbar from "@/components/navbar/nav-bar";
 import { ThemeProvider } from "@/providers/theme-provider";
+import LoadingOverlay from "@/components/loading-overlay";
+import { LoadingOverlayProvider } from "@/providers/overlay-state-provider";
+import StoreProvider from "@/providers/store-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,10 +36,15 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <ThemeProvider attribute="class" enableSystem>
-          <Theme accentColor="violet" grayColor="mauve">
-            <Navbar />
-            {children}
-          </Theme>
+          <LoadingOverlayProvider>
+            <StoreProvider>
+              <Theme accentColor="violet" grayColor="mauve">
+                <LoadingOverlay />
+                <Navbar />
+                {children}
+              </Theme>
+            </StoreProvider>
+          </LoadingOverlayProvider>
         </ThemeProvider>
       </body>
     </html>
