@@ -30,6 +30,8 @@ import SelectComponent from "@/components/ui/select-component";
 import { TbTrash } from "react-icons/tb";
 import { PiPlus } from "react-icons/pi";
 import { v4 as uuidv4 } from "uuid";
+import { addLineChart } from "@/lib/line-charts/line-charts-slice";
+import { useDispatch } from "react-redux";
 
 type FirstFormType = z.infer<typeof firstStepSchema>;
 type SecondStepForm = z.infer<ReturnType<typeof secondStepSchema>>;
@@ -40,11 +42,7 @@ const lineTypes = [
   { label: "dashed", value: "dashed" },
 ];
 
-const DataEntryDialog = ({
-  setDataArray,
-}: {
-  setDataArray: React.SetStateAction<React.Dispatch<any[]>>;
-}) => {
+const DataEntryDialog = () => {
   const formStepEnum = {
     numberOfFields: "Select number of fields",
     nameOfFields: "Enter name for each fields",
@@ -56,6 +54,7 @@ const DataEntryDialog = ({
   const [secondFormData, setSecondFormData] = useState<any>();
   const [secondFormArray, setSecondFormArray] = useState<string[]>([]);
   const [fieldCountToAdd, setFieldCountToAdd] = useState<number | null>(1);
+  const dispatch = useDispatch();
 
   const [currentTab, setCurrentTab] =
     useState<keyof typeof formStepEnum>("numberOfFields");
@@ -128,11 +127,14 @@ const DataEntryDialog = ({
   };
 
   const onSubmitThirdForm = (data: { fields: ThirdStepForm }) => {
-    //@ts-ignore
-    setDataArray((prev) => [
-      ...prev,
-      { firstFormData, secondFormData, data: data.fields },
-    ]);
+    dispatch(
+      addLineChart({
+        id: uuidv4(),
+        firstFormData,
+        secondFormData,
+        data: data.fields,
+      })
+    );
     setCurrentTab("numberOfFields");
     firstForm.reset();
     secondForm.reset();
