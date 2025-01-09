@@ -5,17 +5,32 @@ import { RootState } from "@/lib/store";
 import { useSelector } from "react-redux";
 
 const Page = () => {
-  const lineChartsData = useSelector(
-    (state: RootState) => state.lineCharts.data
+  const persistantData = useSelector(
+    (state: RootState) => state?.lineCharts?.data
   );
+  const nonPersistantData = useSelector(
+    (state: RootState) => state?.lineCharts?.nonPersistentData
+  );
+
   return (
     <div className="pt-24 px-5">
       <div className="flex items-center justify">
         <DataEntryDialog />
       </div>
-      <div className="grid grid-cols-2 justify-items-center gap-4">
-        {lineChartsData.map((singleValue, index) => (
-          <LineChartComponent data={singleValue} key={index} />
+      <div className="flex flex-wrap gap-x-6 justify-center gap-y-5 py-4">
+        {persistantData?.map((singleValue, index) => (
+          <LineChartComponent
+            data={singleValue}
+            key={index}
+            dataOn="persistant"
+          />
+        ))}
+        {nonPersistantData?.map((singleValue, index) => (
+          <LineChartComponent
+            data={singleValue}
+            key={index}
+            dataOn="non-persistant"
+          />
         ))}
       </div>
     </div>

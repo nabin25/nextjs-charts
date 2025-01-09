@@ -1,7 +1,8 @@
 "use client";
 import { useExportImages } from "@/hooks/useExportImages";
 import { Button, Card, Flex } from "@radix-ui/themes";
-import { toPng, toJpeg } from "html-to-image";
+import { IoBookmarksOutline } from "react-icons/io5";
+import { GoBookmarkSlash } from "react-icons/go";
 import { useRef } from "react";
 import {
   LineChart,
@@ -15,8 +16,20 @@ import {
   LabelList,
 } from "recharts";
 import useMedia from "use-media";
+import { TbTrash } from "react-icons/tb";
+import {
+  deleteLineChart,
+  moveToNonPersistant,
+  moveToPersistant,
+} from "@/lib/line-charts/line-charts-slice";
 
-export default function LineChartComponent({ data }: { data: any }) {
+export default function LineChartComponent({
+  data,
+  dataOn,
+}: {
+  data: any;
+  dataOn: "non-persistant" | "persistant";
+}) {
   const isSmallScreen = useMedia({ maxWidth: 768 });
   const isMediumScreen = useMedia({ minWidth: 769, maxWidth: 1024 });
   const isLargeScreen = useMedia({ minWidth: 1025 });
@@ -44,7 +57,7 @@ export default function LineChartComponent({ data }: { data: any }) {
         mt="4"
         style={{
           width: `${getWidth() + 20}px`,
-          height: `${getHeight() + 130}px`,
+          minHeight: `${getHeight() + 130}px`,
         }}
         className="bg-gray-300 shadow-xl dark:bg-[#111] justify-self-center"
       >
@@ -108,13 +121,36 @@ export default function LineChartComponent({ data }: { data: any }) {
             </ResponsiveContainer>
           </div>
         </Flex>
-        <div className="mt-4 flex gap-4">
-          <Button onClick={handleSaveAsPng} className="btn btn-primary">
-            Save as PNG
-          </Button>
-          <Button onClick={handleSaveAsJpeg} className="btn btn-secondary">
-            Save as JPEG
-          </Button>
+        <div className="mt-4 flex gap-4 justify-between flex-wrap">
+          <Flex gap="2">
+            <Button onClick={handleSaveAsPng}>Save as PNG</Button>
+            <Button onClick={handleSaveAsJpeg}>Save as JPEG</Button>
+          </Flex>
+          <Flex gap="2" justify="end">
+            <Button
+              color="bronze"
+              title="Save for later"
+              onClick={
+                dataOn === "persistant"
+                  ? () => moveToNonPersistant(data.id)
+                  : () => moveToPersistant(data.id)
+              }
+            >
+              {dataOn === "persistant" ? (
+                <GoBookmarkSlash />
+              ) : (
+                <IoBookmarksOutline />
+              )}
+            </Button>
+
+            <Button
+              color="red"
+              title="Delete"
+              onClick={() => deleteLineChart(data.id)}
+            >
+              <TbTrash />
+            </Button>
+          </Flex>
         </div>
       </Card>
     </>
