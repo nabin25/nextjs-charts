@@ -22,6 +22,7 @@ import {
   moveToNonPersistant,
   moveToPersistant,
 } from "@/lib/line-charts/line-charts-slice";
+import { useDispatch } from "react-redux";
 
 export default function LineChartComponent({
   data,
@@ -33,6 +34,7 @@ export default function LineChartComponent({
   const isSmallScreen = useMedia({ maxWidth: 768 });
   const isMediumScreen = useMedia({ minWidth: 769, maxWidth: 1024 });
   const isLargeScreen = useMedia({ minWidth: 1025 });
+  const dispatch = useDispatch();
 
   const getWidth = () => {
     if (isSmallScreen) return 300;
@@ -108,7 +110,7 @@ export default function LineChartComponent({
                 {data.secondFormData.map((singleData: any, index: any) => (
                   <Line
                     type="monotone"
-                    key={index}
+                    key={singleData.id}
                     dataKey={singleData.name}
                     stroke={singleData.color || "#8884d8"}
                     activeDot={{ r: 8 }}
@@ -132,21 +134,36 @@ export default function LineChartComponent({
               title="Save for later"
               onClick={
                 dataOn === "persistant"
-                  ? () => moveToNonPersistant(data.id)
-                  : () => moveToPersistant(data.id)
+                  ? () => dispatch(moveToNonPersistant(data.id))
+                  : () => dispatch(moveToPersistant(data.id))
               }
             >
               {dataOn === "persistant" ? (
-                <GoBookmarkSlash />
+                <GoBookmarkSlash
+                  className={`transform transition-all duration-300 ease-in-out ${
+                    dataOn === "persistant"
+                      ? "scale-100 opacity-100 animate-scaleIn"
+                      : "scale-0 opacity-0"
+                  }`}
+                />
               ) : (
-                <IoBookmarksOutline />
+                <IoBookmarksOutline
+                  className={`transform transition-all duration-300 ease-in-out ${
+                    dataOn === "non-persistant"
+                      ? "scale-100 opacity-100 animate-scaleIn"
+                      : "scale-0 opacity-0"
+                  }`}
+                />
               )}
             </Button>
 
             <Button
               color="red"
               title="Delete"
-              onClick={() => deleteLineChart(data.id)}
+              className="!cursor-pointer"
+              onClick={() => {
+                dispatch(deleteLineChart(data.id));
+              }}
             >
               <TbTrash />
             </Button>

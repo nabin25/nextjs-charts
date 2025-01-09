@@ -21,14 +21,14 @@ const Page = () => {
         {persistantData?.map((singleValue, index) => (
           <LineChartComponent
             data={singleValue}
-            key={index}
+            key={singleValue.id}
             dataOn="persistant"
           />
         ))}
         {nonPersistantData?.map((singleValue, index) => (
           <LineChartComponent
             data={singleValue}
-            key={index}
+            key={singleValue.id}
             dataOn="non-persistant"
           />
         ))}
