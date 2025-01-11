@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/providers/theme-provider";
 import LoadingOverlay from "@/components/loading-overlay";
 import { LoadingOverlayProvider } from "@/providers/overlay-state-provider";
 import StoreProvider from "@/providers/store-provider";
+import { DraggableResizableProvider } from "@/providers/dnd-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,15 +37,17 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <ThemeProvider attribute="class" enableSystem>
-          <LoadingOverlayProvider>
-            <StoreProvider>
-              <Theme accentColor="violet" grayColor="mauve">
-                <LoadingOverlay />
-                <Navbar />
-                {children}
-              </Theme>
-            </StoreProvider>
-          </LoadingOverlayProvider>
+          <DraggableResizableProvider>
+            <LoadingOverlayProvider>
+              <StoreProvider>
+                <Theme accentColor="violet" grayColor="mauve">
+                  <LoadingOverlay />
+                  <Navbar />
+                  {children}
+                </Theme>
+              </StoreProvider>
+            </LoadingOverlayProvider>
+          </DraggableResizableProvider>
         </ThemeProvider>
       </body>
     </html>

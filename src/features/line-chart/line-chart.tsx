@@ -3,7 +3,7 @@ import { useExportImages } from "@/hooks/useExportImages";
 import { Button, Card, Flex } from "@radix-ui/themes";
 import { IoBookmarksOutline } from "react-icons/io5";
 import { GoBookmarkSlash } from "react-icons/go";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   LineChart,
   Line,
@@ -23,6 +23,7 @@ import {
   moveToPersistant,
 } from "@/lib/line-charts/line-charts-slice";
 import { useDispatch } from "react-redux";
+import DraggableResizableWrapper from "@/components/dnd/dnd-wrapper";
 
 export default function LineChartComponent({
   data,
@@ -50,6 +51,35 @@ export default function LineChartComponent({
     return 300;
   };
 
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({
+    width: getWidth() + 20,
+    height: getHeight() + 130,
+  });
+
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const { width, height } = entry.contentRect;
+        setDimensions({ width, height });
+      }
+    });
+
+    if (cardRef.current) {
+      resizeObserver.observe(cardRef.current);
+    }
+
+    return () => {
+      if (cardRef.current) {
+        resizeObserver.unobserve(cardRef.current);
+      }
+    };
+  }, []);
+
+  const handleDragEnd = (id: string, x: number, y: number) => {
+    console.log(`Component ${id} moved to:`, { x, y });
+  };
+
   const chartRef = useRef<HTMLDivElement>(null);
   const { handleSaveAsJpeg, handleSaveAsPng } = useExportImages(chartRef);
   return (
@@ -58,36 +88,48 @@ export default function LineChartComponent({
         size="5"
         mt="4"
         style={{
-          width: `${getWidth() + 20}px`,
+          minWidth: `${getWidth() + 20}px`,
           minHeight: `${getHeight() + 130}px`,
         }}
-        className="bg-gray-300 shadow-xl dark:bg-[#111] justify-self-center"
+        ref={cardRef}
+        className="bg-gray-300 shadow-xl dark:bg-[#111] justify-self-center !resize"
       >
         <Flex justify="center" align="center">
           <div>
-            <ResponsiveContainer width={getWidth()} height={getHeight()}>
-              <LineChart data={data.data} margin={{ top: 20 }}>
-                {data.firstFormData.show_cartesian_grid && (
-                  <CartesianGrid strokeDasharray="3 3" />
-                )}
-                <XAxis dataKey="name" padding={{ left: 30, right: 30 }} />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                {data.secondFormData.map((singleData: any, index: any) => (
-                  <Line
-                    type="monotone"
-                    key={index}
-                    dataKey={singleData.name}
-                    stroke={singleData.color || "#8884d8"}
-                    activeDot={{ r: 8 }}
-                    strokeDasharray={
-                      singleData.line_type === "dashed" ? "3 3" : "0"
-                    }
-                  ></Line>
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
+            <DraggableResizableWrapper
+              id="unique-id"
+              initialX={50}
+              initialY={50}
+              onDragEnd={handleDragEnd}
+            >
+              <ResponsiveContainer
+                width={dimensions.width - 20}
+                height={dimensions.height - 130}
+                className="resize"
+              >
+                <LineChart data={data.data} margin={{ top: 20 }}>
+                  {data.firstFormData.show_cartesian_grid && (
+                    <CartesianGrid strokeDasharray="3 3" />
+                  )}
+                  <XAxis dataKey="name" padding={{ left: 30, right: 30 }} />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  {data.secondFormData.map((singleData: any, index: any) => (
+                    <Line
+                      type="monotone"
+                      key={index}
+                      dataKey={singleData.name}
+                      stroke={singleData.color || "#8884d8"}
+                      activeDot={{ r: 8 }}
+                      strokeDasharray={
+                        singleData.line_type === "dashed" ? "3 3" : "0"
+                      }
+                    ></Line>
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            </DraggableResizableWrapper>
           </div>
           <div
             style={{
